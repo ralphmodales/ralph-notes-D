@@ -52,7 +52,7 @@ while cap.isOpened():
                 mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
             )
 
-    # display resut
+    # display result
     cv2.imshow('mwhahahaha', canvas)
     
     if cv2.waitKey(5) & 0xFF == 27:  
