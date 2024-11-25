@@ -54,7 +54,9 @@ while cap.isOpened():
 
     # display result
     cv2.imshow('mwhahahaha', canvas)
-    
+    print("SOYBOYYYYYYYYY")
+
+    # close when esc was pressed
     if cv2.waitKey(5) & 0xFF == 27:  
         break
 
