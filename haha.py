@@ -31,7 +31,7 @@ def is_mouth_open(face_landmarks):
 
     mouth_height = abs(np.mean(lower_y) - np.mean(upper_y))
 
-    return mouth_height > 0.06 
+    return mouth_height > 0.07 # adjust this if not working 
 
 while cap.isOpened():
     success, image = cap.read()
