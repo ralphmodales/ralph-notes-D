@@ -5,6 +5,7 @@ import numpy as np
 mp_face_mesh = mp.solutions.face_mesh
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
 
 face_mesh = mp_face_mesh.FaceMesh(
     max_num_faces=1,
@@ -28,7 +29,6 @@ def is_mouth_open(face_landmarks):
     upper_y = [face_landmarks.landmark[idx].y for idx in upper_lip]
     lower_y = [face_landmarks.landmark[idx].y for idx in lower_lip]
 
-
     mouth_height = abs(np.mean(lower_y) - np.mean(upper_y))
 
     return mouth_height > 0.07 # adjust this if not working 
@@ -38,7 +38,6 @@ while cap.isOpened():
     if not success:
         continue
 
-    # black canvas
     canvas = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -55,9 +54,9 @@ while cap.isOpened():
             mp_drawing.draw_landmarks(
                 canvas,
                 face_landmarks,
-                mp_face_mesh.FACEMESH_CONTOURS,
-                mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1, circle_radius=1),
-                mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=1, circle_radius=1)
+                mp_face_mesh.FACEMESH_TESSELATION,  # tesselation for detailed wireframe
+                landmark_drawing_spec=None,  
+                connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_tesselation_style()
             )
 
     if hand_results.multi_hand_landmarks:
@@ -67,8 +66,8 @@ while cap.isOpened():
                 canvas,
                 hand_landmarks,
                 mp_hands.HAND_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=2, circle_radius=4),
-                mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
+                landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
+                connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
             )
 
     cv2.imshow('Soyface Detector', canvas)
