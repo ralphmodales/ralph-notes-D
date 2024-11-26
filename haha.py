@@ -21,6 +21,18 @@ hands = mp_hands.Hands(
 
 cap = cv2.VideoCapture(0)
 
+def is_mouth_open(face_landmarks):
+    upper_lip = [0, 267, 269, 270, 408, 306, 292, 325, 446, 361]
+    lower_lip = [17, 84, 314, 405, 321, 375, 291, 409, 270, 269]
+
+    upper_y = [face_landmarks.landmark[idx].y for idx in upper_lip]
+    lower_y = [face_landmarks.landmark[idx].y for idx in lower_lip]
+
+
+    mouth_height = abs(np.mean(lower_y) - np.mean(upper_y))
+
+    return mouth_height > 0.06 
+
 while cap.isOpened():
     success, image = cap.read()
     if not success:
@@ -35,6 +47,10 @@ while cap.isOpened():
 
     if face_results.multi_face_landmarks:
         for face_landmarks in face_results.multi_face_landmarks:
+            # if mouth is open print soyboy
+            if is_mouth_open(face_landmarks):
+                print('SOYBOYYYYY')
+
             # for face landmarks
             mp_drawing.draw_landmarks(
                 canvas,
@@ -55,8 +71,7 @@ while cap.isOpened():
                 mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
             )
 
-    cv2.imshow('Soyboy Webcam', canvas)
-    print('SOYBOYYYYY')
+    cv2.imshow('Soyface Detector', canvas)
 
     if cv2.waitKey(5) & 0xFF == 27:
         break
