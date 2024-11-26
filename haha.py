@@ -38,6 +38,7 @@ while cap.isOpened():
     if not success:
         continue
 
+    # black canvas, you can change it by adding canvas with its rgb
     canvas = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
