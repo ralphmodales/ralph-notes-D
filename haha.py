@@ -25,8 +25,8 @@ MESH_ANNOTATIONS = {
     'leftEyeLower2': [446, 261, 448, 449, 450, 451, 452, 453, 464],
     'leftEyeLower3': [372, 340, 346, 347, 348, 349, 350, 357, 465],
 
-    'rightEyeIris': [473, 474, 475, 476, 477],
-    'leftEyeIris': [468, 469, 470, 471, 472],
+    'rightEyebrow': [70, 63, 105, 66, 107, 55, 65, 52, 53, 46],
+    'leftEyebrow': [300, 293, 334, 296, 336, 285, 295, 282, 283, 276]
 }
 
 
@@ -81,6 +81,49 @@ def draw_eye_outline(canvas, face_landmarks):
     cv2.polylines(canvas, [right_points], True, (255, 0, 0), 2)  
     cv2.polylines(canvas, [left_points], True, (255, 0, 0), 2)   
 
+def draw_iris_outline(canvas, face_landmarks): 
+    right_iris = [474, 475, 476, 477]
+    left_iris = [469, 470, 471, 472]
+    
+    def convert_landmarks_to_points(landmark_indices):
+        points = []
+        for idx in landmark_indices:
+            landmark = face_landmarks.landmark[idx]
+            x = int(landmark.x * canvas.shape[1])
+            y = int(landmark.y * canvas.shape[0])
+            points.append((x, y))
+        return points
+    
+    right_iris_points = convert_landmarks_to_points(right_iris)
+    left_iris_points = convert_landmarks_to_points(left_iris)
+    
+    right_iris_points = np.array(right_iris_points, np.int32).reshape((-1, 1, 2))
+    left_iris_points = np.array(left_iris_points, np.int32).reshape((-1, 1, 2))
+    
+    gojo_blue = (230, 180, 50)  
+     
+    cv2.polylines(canvas, [right_iris_points], True, gojo_blue, 2)  
+    cv2.polylines(canvas, [left_iris_points], True, gojo_blue, 2)
+
+def draw_eyebrow_outline(canvas, face_landmarks):
+    def convert_landmarks_to_points(landmark_indices):
+        points = []
+        for idx in landmark_indices:
+            landmark = face_landmarks.landmark[idx]
+            x = int(landmark.x * canvas.shape[1])
+            y = int(landmark.y * canvas.shape[0])
+            points.append((x, y))
+        return points
+    
+    right_eyebrow_points = convert_landmarks_to_points(MESH_ANNOTATIONS['rightEyebrow'])
+    left_eyebrow_points = convert_landmarks_to_points(MESH_ANNOTATIONS['leftEyebrow'])
+    
+    right_eyebrow_points = np.array(right_eyebrow_points, np.int32).reshape((-1, 1, 2))
+    left_eyebrow_points = np.array(left_eyebrow_points, np.int32).reshape((-1, 1, 2))
+    
+    cv2.polylines(canvas, [right_eyebrow_points], True, (0, 255, 0), 2)  # Green eyebrows
+    cv2.polylines(canvas, [left_eyebrow_points], True, (0, 255, 0), 2)   # Green eyebrows
+
 def draw_lip_outline(canvas, face_landmarks):
     upper_lip_landmarks = [61,185,40,39,37,0,267,269,270,409,291,308,415,310,311,312,13,82,81,80,191,78]
     lower_lip_landmarks = [78,95,88,178,87,14,317,402,318,324,308,291,375,321,405,314,17,84,181,91,146,61]
@@ -96,7 +139,10 @@ def draw_lip_outline(canvas, face_landmarks):
     
     points = np.array(points, np.int32)
     points = points.reshape((-1, 1, 2))
-    cv2.polylines(canvas, [points], True, (0, 0, 255), 2)  
+    
+    # Bright red color, thicker line, and filled
+    cv2.polylines(canvas, [points], True, (0, 0, 255), 3)  
+    cv2.fillPoly(canvas, [points], (0, 0, 200)) 
 
 while cap.isOpened():
     success, image = cap.read()
@@ -115,8 +161,10 @@ while cap.isOpened():
             # if mouth is open print soyboy
             if is_mouth_open(face_landmarks):
                 print('SOYBOYYYYY')
-            
+           
             draw_eye_outline(canvas, face_landmarks)
+            draw_iris_outline(canvas, face_landmarks)  
+            draw_eyebrow_outline(canvas, face_landmarks)  
             draw_lip_outline(canvas, face_landmarks)
 
             # for face landmarks
