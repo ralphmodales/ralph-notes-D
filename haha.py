@@ -33,6 +33,23 @@ def is_mouth_open(face_landmarks):
 
     return mouth_height > 0.07 # adjust this if not working 
 
+def draw_lip_outline(canvas, face_landmarks):
+    upper_lip_landmarks = [61,185,40,39,37,0,267,269,270,409,291,308,415,310,311,312,13,82,81,80,191,78]
+    lower_lip_landmarks = [78,95,88,178,87,14,317,402,318,324,308,291,375,321,405,314,17,84,181,91,146,61]
+    
+    lip_landmarks = upper_lip_landmarks + lower_lip_landmarks
+    
+    points = []
+    for idx in lip_landmarks:
+        landmark = face_landmarks.landmark[idx]
+        x = int(landmark.x * canvas.shape[1])
+        y = int(landmark.y * canvas.shape[0])
+        points.append((x, y))
+    
+    points = np.array(points, np.int32)
+    points = points.reshape((-1, 1, 2))
+    cv2.polylines(canvas, [points], True, (0, 0, 255), 2)  
+
 while cap.isOpened():
     success, image = cap.read()
     if not success:
@@ -50,6 +67,8 @@ while cap.isOpened():
             # if mouth is open print soyboy
             if is_mouth_open(face_landmarks):
                 print('SOYBOYYYYY')
+
+            draw_lip_outline(canvas, face_landmarks)
 
             # for face landmarks
             mp_drawing.draw_landmarks(
