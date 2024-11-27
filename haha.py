@@ -7,6 +7,29 @@ mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
+# from tensorflow/tjms-models
+MESH_ANNOTATIONS = {
+    'rightEyeUpper0': [246, 161, 160, 159, 158, 157, 173],
+    'rightEyeLower0': [33, 7, 163, 144, 145, 153, 154, 155, 133],
+    'rightEyeUpper1': [247, 30, 29, 27, 28, 56, 190],
+    'rightEyeLower1': [130, 25, 110, 24, 23, 22, 26, 112, 243],
+    'rightEyeUpper2': [113, 225, 224, 223, 222, 221, 189],
+    'rightEyeLower2': [226, 31, 228, 229, 230, 231, 232, 233, 244],
+    'rightEyeLower3': [143, 111, 117, 118, 119, 120, 121, 128, 245],
+    
+    'leftEyeUpper0': [466, 388, 387, 386, 385, 384, 398],
+    'leftEyeLower0': [263, 249, 390, 373, 374, 380, 381, 382, 362],
+    'leftEyeUpper1': [467, 260, 259, 257, 258, 286, 414],
+    'leftEyeLower1': [359, 255, 339, 254, 253, 252, 256, 341, 463],
+    'leftEyeUpper2': [342, 445, 444, 443, 442, 441, 413],
+    'leftEyeLower2': [446, 261, 448, 449, 450, 451, 452, 453, 464],
+    'leftEyeLower3': [372, 340, 346, 347, 348, 349, 350, 357, 465],
+
+    'rightEyeIris': [473, 474, 475, 476, 477],
+    'leftEyeIris': [468, 469, 470, 471, 472],
+}
+
+
 face_mesh = mp_face_mesh.FaceMesh(
     max_num_faces=1,
     refine_landmarks=True,
@@ -32,6 +55,31 @@ def is_mouth_open(face_landmarks):
     mouth_height = abs(np.mean(lower_y) - np.mean(upper_y))
 
     return mouth_height > 0.07 # adjust this if not working 
+
+def draw_eye_outline(canvas, face_landmarks):
+    right_eye_points = (MESH_ANNOTATIONS['rightEyeUpper0'] + 
+                        list(reversed(MESH_ANNOTATIONS['rightEyeLower0'])))
+    
+    left_eye_points = (MESH_ANNOTATIONS['leftEyeUpper0'] + 
+                       list(reversed(MESH_ANNOTATIONS['leftEyeLower0'])))
+    
+    def convert_landmarks_to_points(landmark_indices):
+        points = []
+        for idx in landmark_indices:
+            landmark = face_landmarks.landmark[idx]
+            x = int(landmark.x * canvas.shape[1])
+            y = int(landmark.y * canvas.shape[0])
+            points.append((x, y))
+        return points
+    
+    right_points = convert_landmarks_to_points(right_eye_points)
+    left_points = convert_landmarks_to_points(left_eye_points)
+    
+    right_points = np.array(right_points, np.int32).reshape((-1, 1, 2))
+    left_points = np.array(left_points, np.int32).reshape((-1, 1, 2))
+    
+    cv2.polylines(canvas, [right_points], True, (255, 0, 0), 2)  
+    cv2.polylines(canvas, [left_points], True, (255, 0, 0), 2)   
 
 def draw_lip_outline(canvas, face_landmarks):
     upper_lip_landmarks = [61,185,40,39,37,0,267,269,270,409,291,308,415,310,311,312,13,82,81,80,191,78]
@@ -67,7 +115,8 @@ while cap.isOpened():
             # if mouth is open print soyboy
             if is_mouth_open(face_landmarks):
                 print('SOYBOYYYYY')
-
+            
+            draw_eye_outline(canvas, face_landmarks)
             draw_lip_outline(canvas, face_landmarks)
 
             # for face landmarks
