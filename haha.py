@@ -1,13 +1,14 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
-import tkinter as tk
-from tkinter import filedialog
+mp_objectron = mp.solutions.objectron
 
 # from tensorflow/tjms-models
 MESH_ANNOTATIONS = {
@@ -43,6 +44,14 @@ hands = mp_hands.Hands(
     max_num_hands=2,
     min_detection_confidence=0.7,
     min_tracking_confidence=0.5
+)
+
+objectron = mp_objectron.Objectron(
+    static_image_mode=False,
+    max_num_objects=5,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5,
+    model_name='Cup'  
 )
 
 cap = cv2.VideoCapture(0)
@@ -116,7 +125,31 @@ def draw_eye_outline(canvas, face_landmarks):
     left_points = np.array(left_points, np.int32).reshape((-1, 1, 2))
     
     cv2.polylines(canvas, [right_points], True, (255, 0, 0), 2)  
-    cv2.polylines(canvas, [left_points], True, (255, 0, 0), 2)   
+    cv2.polylines(canvas, [left_points], True, (255, 0, 0), 2)  
+
+def draw_objectron_objects(canvas, detection_result):
+    for detected_object in detection_result.detected_objects:
+        mp_drawing.draw_landmarks(
+            canvas,
+            detected_object.landmarks_2d,
+            mp_objectron.BOX_CONNECTIONS,
+            mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2),
+            mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
+        )
+
+        box_center = detected_object.landmarks_2d.landmark[0]
+        x = int(box_center.x * canvas.shape[1])
+        y = int(box_center.y * canvas.shape[0])
+
+        cv2.putText(
+            canvas,
+            "Object", 
+            (x, y - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.9,
+            (255, 255, 255),
+            2
+        )
 
 def draw_iris_outline(canvas, face_landmarks): 
     right_iris = [474, 475, 476, 477]
@@ -194,10 +227,7 @@ while cap.isOpened():
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     face_results = face_mesh.process(image_rgb)
     hand_results = hands.process(image_rgb)
-
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    face_results = face_mesh.process(image_rgb)
-    hand_results = hands.process(image_rgb)
+    objectron_results = objectron.process(image_rgb)
 
     if face_results.multi_face_landmarks:
         for face_landmarks in face_results.multi_face_landmarks:
@@ -229,6 +259,9 @@ while cap.isOpened():
                 landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style(),
                 connection_drawing_spec=mp_drawing_styles.get_default_hand_connections_style()
             )
+
+    if objectron_results.detected_objects:
+        draw_objectron_objects(canvas, objectron_results)
 
     cv2.imshow('Soyface Detector', canvas)
 
