@@ -143,7 +143,7 @@ def draw_objectron_objects(canvas, detection_result):
 
         cv2.putText(
             canvas,
-            "Object", 
+            "Cup", 
             (x, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.9,
@@ -191,8 +191,8 @@ def draw_eyebrow_outline(canvas, face_landmarks):
     right_eyebrow_points = np.array(right_eyebrow_points, np.int32).reshape((-1, 1, 2))
     left_eyebrow_points = np.array(left_eyebrow_points, np.int32).reshape((-1, 1, 2))
     
-    cv2.polylines(canvas, [right_eyebrow_points], True, (0, 255, 0), 2)  # Green eyebrows
-    cv2.polylines(canvas, [left_eyebrow_points], True, (0, 255, 0), 2)   # Green eyebrows
+    cv2.polylines(canvas, [right_eyebrow_points], True, (0, 255, 0), 2) 
+    cv2.polylines(canvas, [left_eyebrow_points], True, (0, 255, 0), 2)   
 
 def draw_lip_outline(canvas, face_landmarks):
     upper_lip_landmarks = [61,185,40,39,37,0,267,269,270,409,291,308,415,310,311,312,13,82,81,80,191,78]
@@ -209,8 +209,7 @@ def draw_lip_outline(canvas, face_landmarks):
     
     points = np.array(points, np.int32)
     points = points.reshape((-1, 1, 2))
-    
-    # Bright red color, thicker line, and filled
+
     cv2.polylines(canvas, [points], True, (0, 0, 255), 3)  
     cv2.fillPoly(canvas, [points], (0, 0, 200)) 
 
