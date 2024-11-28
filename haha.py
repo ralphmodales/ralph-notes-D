@@ -6,6 +6,8 @@ mp_face_mesh = mp.solutions.face_mesh
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
+import tkinter as tk
+from tkinter import filedialog
 
 # from tensorflow/tjms-models
 MESH_ANNOTATIONS = {
@@ -44,6 +46,41 @@ hands = mp_hands.Hands(
 )
 
 cap = cv2.VideoCapture(0)
+
+def load_background_image(filepath):
+    try: 
+        bg_image = cv2.imread(filepath)
+        bg_image = cv2.resize(bg_image, (image.shape[1], image.shape[0]))
+        return bg_image
+    except Exception as e:
+        print(f"Error loading background image: {e}")
+        return None
+
+current_background = None
+
+def select_background():
+    global current_background
+    root = tk.Tk()
+    root.withdraw()  
+    file_path = filedialog.askopenfilename(
+        title="Select Background Image",
+        filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")]
+    )
+    
+    if file_path:
+        bg = load_background_image(file_path)
+        if bg is not None:
+            current_background = bg
+            print(f"Background set to: {file_path}")
+        else:
+            print("Failed to load background image.")
+    else:
+        print("No image selected.")
+
+def reset_to_black_background():
+    global current_background
+    current_background = None
+    print("Background reset to black.")
 
 def is_mouth_open(face_landmarks):
     upper_lip = [0, 267, 269, 270, 408, 306, 292, 325, 446, 361]
@@ -149,8 +186,14 @@ while cap.isOpened():
     if not success:
         continue
 
-    # black canvas, you can change it by adding canvas with its rgb
-    canvas = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+    if current_background is not None:
+        canvas = current_background.copy()
+    else:
+        canvas = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    face_results = face_mesh.process(image_rgb)
+    hand_results = hands.process(image_rgb)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     face_results = face_mesh.process(image_rgb)
@@ -189,8 +232,13 @@ while cap.isOpened():
 
     cv2.imshow('Soyface Detector', canvas)
 
-    if cv2.waitKey(5) & 0xFF == 27:
+    key = cv2.waitKey(5) & 0xFF
+    if key == 27:  
         break
+    elif key == ord('b'): 
+        reset_to_black_background()
+    elif key == ord('i'):
+        select_background()
 
 cap.release()
 cv2.destroyAllWindows()
